@@ -1,0 +1,26 @@
+{
+  "experiment_id": "TRM-EXP-02",
+  "slug": "trm_test_time_voting",
+  "note": "Snapshot summary copied from internal runs documented during development. Re-run TRM-EXP-02 to generate voting_report.json, dataset_fingerprint.json, and checkpoint_sha256.txt.",
+  "setup": {
+    "metric_target": "pass@2_per_output",
+    "checkpoint": "arc_v2_public/step_723914",
+    "dataset": "arc2concept-aug-1000 (official v2 filter)"
+  },
+  "observations": [
+    {
+      "strategy": "baseline_last_step_count_vote",
+      "pass@2_per_output": 0.0523
+    },
+    {
+      "strategy": "best_fixed_step_count_vote",
+      "best_step": 2,
+      "pass@2_per_output": 0.0581
+    },
+    {
+      "strategy": "pooled_all_steps_count_vote",
+      "pass@2_per_output": 0.0465
+    }
+  ]
+}
+

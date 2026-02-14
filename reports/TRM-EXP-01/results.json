@@ -1,0 +1,23 @@
+{
+  "experiment_id": "TRM-EXP-01",
+  "slug": "trm_reproduce_arcprize_verification",
+  "note": "Snapshot summary copied from internal runs documented during development. For full provenance, re-run TRM-EXP-01 to generate eval_report.json + submission.json and attach checkpoint/dataset fingerprints.",
+  "observations": [
+    {
+      "dataset": "ARC-AGI-1 public eval (paper-mode style, 1000x aug)",
+      "metrics": {
+        "pass@1": 0.40,
+        "pass@2": 0.44
+      }
+    },
+    {
+      "dataset": "ARC-AGI-2 public eval (paper-mode style, 1000x aug)",
+      "metrics": {
+        "pass@1": 0.0292,
+        "pass@2": 0.05,
+        "pass@1000": 0.1167
+      }
+    }
+  ]
+}
+

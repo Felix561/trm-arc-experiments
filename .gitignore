@@ -1,0 +1,20 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Editors / OS
+.DS_Store
+Thumbs.db
+
+# Large / generated artifacts (do not commit)
+data/
+assets/checkpoints/
+runs/
+reports/**/raw/
+
+# Optional local notes
+LOCAL_NOTES.md
+

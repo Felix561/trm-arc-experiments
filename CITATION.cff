@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use this work, please cite it."
+title: "TRM ARC Evaluation & Test-Time Voting Experiments"
+type: software
+authors:
+  - name: "Felix"
+repository-code: "https://github.com/Felix561/trm-arc-experiments"
+license: MIT
+date-released: "2026-02-13"
+preferred-citation:
+  type: article
+  title: "TRM ARC Evaluation & Test-Time Voting Experiments"
+  authors:
+    - name: "Felix"
+  year: 2026
+  url: "https://github.com/Felix561/trm-arc-experiments"
+

@@ -1,0 +1,8 @@
+{
+  "experiment_id": "TRM-EXP-03",
+  "slug": "trm_structured_prefix_program_embeddings_negative",
+  "status": "negative_or_inconclusive",
+  "summary": "Structured-prefix slot factorization and prefix-only finetuning did not produce reliable evaluation gains in our runs; some pass@K metrics were flat-to-worse. This snapshot exists to document the direction and prevent repeated effort.",
+  "recommended_next_step": "If revisiting, pre-register an eval protocol (choose step/hyperparams on a dev set, report once on eval2), and attach full dataset+checkpoint fingerprints for each run."
+}
+
