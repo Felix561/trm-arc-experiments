@@ -376,8 +376,10 @@ def main() -> None:
     ap.add_argument("--batch_size", type=int, default=768)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--max_steps", type=int, default=16)
+    ap.add_argument("--forward_dtype", choices=["bfloat16", "float16", "float32"], default="bfloat16")
     ap.add_argument("--filter_official_eval", choices=["v1", "v2", "concept"], default="v2")
     ap.add_argument("--halt_logit_threshold", type=float, default=0.0)
+    ap.add_argument("--disable_compile", action="store_true", help="Disable torch.compile (recommended for stability)")
 
     # Advanced rescoring
     ap.add_argument("--enable_rescore", action="store_true", help="Enable TRM teacher-forced NLL / PoE rescoring (expensive)")
@@ -501,7 +503,7 @@ def main() -> None:
         expansion=4,
         puzzle_emb_ndim=512,
         pos_encodings="rope",
-        forward_dtype="bfloat16",
+        forward_dtype=str(args.forward_dtype),
         mlp_t=False,
         puzzle_emb_len=16,
         no_ACT_continue=True,
@@ -511,6 +513,8 @@ def main() -> None:
         for k, v in dict(ckpt_arch).items():
             if k in allowed and v is not None:
                 model_cfg[k] = v
+    # Ensure CLI override wins (checkpoint config may include forward_dtype)
+    model_cfg["forward_dtype"] = str(args.forward_dtype)
     model_cls = load_model_class("recursive_reasoning.trm@TinyRecursiveReasoningModel_ACTV1")
     loss_cls = load_model_class("losses@ACTLossHead")
     with torch.device("cuda"):
@@ -522,7 +526,7 @@ def main() -> None:
     model.load_state_dict(sd, assign=True)
     model = model.cuda().eval()
 
-    if "DISABLE_COMPILE" not in os.environ:
+    if (not args.disable_compile) and ("DISABLE_COMPILE" not in os.environ):
         try:
             model = torch.compile(model)
         except Exception:

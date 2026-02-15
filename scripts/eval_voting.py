@@ -203,6 +203,7 @@ def main() -> None:
     ap.add_argument("--batch_size", type=int, default=768)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--max_steps", type=int, default=16)
+    ap.add_argument("--forward_dtype", choices=["bfloat16", "float16", "float32"], default="bfloat16")
     ap.add_argument("--filter_official_eval", choices=["v1", "v2", "concept"], default="v2")
     ap.add_argument("--halt_logit_threshold", type=float, default=0.0)
     ap.add_argument("--no_sha256", action="store_true")
@@ -313,7 +314,7 @@ def main() -> None:
         expansion=4,
         puzzle_emb_ndim=512,
         pos_encodings="rope",
-        forward_dtype="bfloat16",
+        forward_dtype=str(args.forward_dtype),
         mlp_t=False,
         puzzle_emb_len=16,
         no_ACT_continue=True,
