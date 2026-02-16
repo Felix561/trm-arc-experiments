@@ -25,6 +25,18 @@ import torch
 from torch.utils.data import DataLoader
 
 
+def arc_grid_to_np(grid):
+    arr = np.array(grid)
+    return arr.astype(np.uint8)
+
+
+def grid_hash(grid: np.ndarray) -> str:
+    assert grid.ndim == 2 and grid.dtype == np.uint8
+    buffer = [x.to_bytes(1, byteorder="big") for x in grid.shape]
+    buffer.append(grid.tobytes())
+    return hashlib.sha256(b"".join(buffer)).hexdigest()
+
+
 def _sha256_file(path: Path, chunk_size: int = 8 * 1024 * 1024) -> str:
     h = hashlib.sha256()
     with path.open("rb") as f:
@@ -61,6 +73,77 @@ def _strip_orig_mod_prefix(sd: Dict[str, Any]) -> Dict[str, Any]:
         else:
             out[k] = v
     return out
+
+
+def _compute_arc_metrics_and_submission_local(evaluator, save_path: Optional[str]) -> Dict[str, float]:
+    """
+    Single-process equivalent of upstream ARC.result().
+    Upstream implementation always uses torch.distributed.gather_object, which fails
+    when no process group is initialized (common in local eval runs).
+    """
+    submission = {}
+    pass_ks = list(getattr(evaluator, "pass_Ks", (1, 2, 5, 10, 100, 1000)))
+    submission_k = int(getattr(evaluator, "submission_K", 2))
+    test_puzzles = getattr(evaluator, "test_puzzles")
+    local_hmap = getattr(evaluator, "_local_hmap")
+    local_preds = getattr(evaluator, "_local_preds")
+
+    correct = [0.0 for _ in range(len(pass_ks))]
+
+    for task_name, puzzle in test_puzzles.items():
+        submission[task_name] = []
+        num_test_correct = [0 for _ in range(len(pass_ks))]
+
+        for pair in puzzle.get("test", []):
+            input_hash = grid_hash(arc_grid_to_np(pair["input"]))
+            label_hash = grid_hash(arc_grid_to_np(pair["output"]))
+
+            p_map = {}
+            for h, q in local_preds.get(task_name, {}).get(input_hash, []):
+                p_map.setdefault(h, [0, 0.0])
+                p_map[h][0] += 1
+                p_map[h][1] += float(q)
+
+            if not p_map:
+                print(f"Puzzle {task_name} has no predictions.")
+                continue
+
+            # Convert sum_q to avg_q and sort by (count desc, avg_q desc).
+            ranked = []
+            for h, (cnt, sumq) in p_map.items():
+                ranked.append((h, int(cnt), float(sumq) / max(int(cnt), 1)))
+            ranked.sort(key=lambda t: (t[1], t[2]), reverse=True)
+
+            for i, k in enumerate(pass_ks):
+                topk = {h for (h, _cnt, _avgq) in ranked[: int(k)]}
+                num_test_correct[i] += int(label_hash in topk)
+
+            pred_grids = []
+            for h, _cnt, _avgq in ranked[:submission_k]:
+                if h in local_hmap:
+                    pred_grids.append(local_hmap[h])
+
+            while len(pred_grids) < submission_k and len(pred_grids) > 0:
+                pred_grids.append(pred_grids[0])
+
+            if len(pred_grids) == 0:
+                continue
+
+            submission[task_name].append(
+                {f"attempt_{i + 1}": grid.tolist() for i, grid in enumerate(pred_grids)}
+            )
+
+        tests = max(len(puzzle.get("test", [])), 1)
+        for i in range(len(pass_ks)):
+            correct[i] += num_test_correct[i] / tests
+
+    if save_path is not None:
+        save_path = str(save_path)
+        Path(save_path).mkdir(parents=True, exist_ok=True)
+        (Path(save_path) / "submission.json").write_text(json.dumps(submission), encoding="utf-8")
+
+    denom = max(len(test_puzzles), 1)
+    return {f"ARC/pass@{k}": correct[i] / denom for i, k in enumerate(pass_ks)}
 
 
 def main() -> None:
@@ -243,7 +326,10 @@ def main() -> None:
     # Results
     submission_dir = out_dir / "submission"
     submission_dir.mkdir(parents=True, exist_ok=True)
-    metrics = evaluator.result(save_path=None if args.no_submission else str(submission_dir), rank=0, world_size=1) or {}
+    metrics = _compute_arc_metrics_and_submission_local(
+        evaluator=evaluator,
+        save_path=None if args.no_submission else str(submission_dir),
+    )
 
     # Add ARC Prize-style per-output metrics (2 attempts per output => pass@2_per_output).
     # Upstream TRM evaluator only returns per-task averages; compute per-output averages here.
