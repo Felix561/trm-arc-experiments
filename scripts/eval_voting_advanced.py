@@ -122,6 +122,14 @@ def _sha256_json_bytes(obj: Any) -> str:
     return hashlib.sha256(b).hexdigest()
 
 
+def _checkpoint_num_puzzle_identifiers(sd: Dict[str, Any]) -> Optional[int]:
+    key = "model.inner.puzzle_emb.weights"
+    w = sd.get(key)
+    if w is None or not hasattr(w, "shape") or len(w.shape) < 1:
+        return None
+    return int(w.shape[0])
+
+
 def _load_official_eval_task_ids(trm_root: Path, eval_version: str) -> Optional[set]:
     combined_dir = trm_root / "kaggle" / "combined"
     if eval_version == "v2":
@@ -484,6 +492,20 @@ def main() -> None:
     loader = DataLoader(dataset, batch_size=None, num_workers=1, prefetch_factor=8, pin_memory=True, persistent_workers=True)
     metadata = dataset.metadata
 
+    # Load checkpoint early so we can adapt embedding table size if needed.
+    sd = torch.load(args.checkpoint, map_location="cuda")
+    if isinstance(sd, dict):
+        sd = {(k[len("_orig_mod.") :] if k.startswith("_orig_mod.") else k): v for k, v in sd.items()}
+
+    num_pids = int(metadata.num_puzzle_identifiers)
+    ckpt_num_pids = _checkpoint_num_puzzle_identifiers(sd) if isinstance(sd, dict) else None
+    if ckpt_num_pids is not None and ckpt_num_pids != num_pids:
+        print(
+            f"[compat] dataset num_puzzle_identifiers={num_pids}, "
+            f"checkpoint num_puzzle_identifiers={ckpt_num_pids}; using checkpoint size for model init"
+        )
+        num_pids = int(ckpt_num_pids)
+
     # Model
     ckpt_cfg = _try_load_checkpoint_config(args.checkpoint)
     ckpt_arch = _arch_from_checkpoint_config(ckpt_cfg)
@@ -491,7 +513,7 @@ def main() -> None:
         batch_size=args.batch_size,
         vocab_size=metadata.vocab_size,
         seq_len=metadata.seq_len,
-        num_puzzle_identifiers=metadata.num_puzzle_identifiers,
+        num_puzzle_identifiers=num_pids,
         causal=False,
         halt_exploration_prob=0.1,
         halt_max_steps=args.max_steps,
@@ -521,9 +543,6 @@ def main() -> None:
     with torch.device("cuda"):
         model = model_cls(model_cfg)
         model = loss_cls(model, loss_type="stablemax_cross_entropy")
-    sd = torch.load(args.checkpoint, map_location="cuda")
-    if isinstance(sd, dict):
-        sd = {(k[len("_orig_mod.") :] if k.startswith("_orig_mod.") else k): v for k, v in sd.items()}
     model.load_state_dict(sd, assign=True)
     model = model.cuda().eval()
 

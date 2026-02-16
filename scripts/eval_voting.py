@@ -86,6 +86,14 @@ def _sha256_json_bytes(obj: Any) -> str:
     return hashlib.sha256(b).hexdigest()
 
 
+def _checkpoint_num_puzzle_identifiers(sd: Dict[str, Any]) -> Optional[int]:
+    key = "model.inner.puzzle_emb.weights"
+    w = sd.get(key)
+    if w is None or not hasattr(w, "shape") or len(w.shape) < 1:
+        return None
+    return int(w.shape[0])
+
+
 def _sigmoid_float(x: float) -> float:
     if x >= 0:
         z = math.exp(-x)
@@ -297,12 +305,26 @@ def main() -> None:
     )
     metadata = dataset.metadata
 
+    # Load checkpoint early so we can adapt embedding table size if needed.
+    sd = torch.load(str(ckpt_path), map_location="cuda")
+    if isinstance(sd, dict):
+        sd = {(k[len("_orig_mod.") :] if k.startswith("_orig_mod.") else k): v for k, v in sd.items()}
+
+    num_pids = int(metadata.num_puzzle_identifiers)
+    ckpt_num_pids = _checkpoint_num_puzzle_identifiers(sd) if isinstance(sd, dict) else None
+    if ckpt_num_pids is not None and ckpt_num_pids != num_pids:
+        print(
+            f"[compat] dataset num_puzzle_identifiers={num_pids}, "
+            f"checkpoint num_puzzle_identifiers={ckpt_num_pids}; using checkpoint size for model init"
+        )
+        num_pids = int(ckpt_num_pids)
+
     # Model (same minimal defaults as eval_only.py)
     model_cfg = dict(
         batch_size=int(args.batch_size),
         vocab_size=int(metadata.vocab_size),
         seq_len=int(metadata.seq_len),
-        num_puzzle_identifiers=int(metadata.num_puzzle_identifiers),
+        num_puzzle_identifiers=num_pids,
         causal=False,
         halt_exploration_prob=0.1,
         halt_max_steps=int(args.max_steps),
@@ -326,9 +348,6 @@ def main() -> None:
         model = model_cls(model_cfg)
         model = loss_cls(model, loss_type="stablemax_cross_entropy")
 
-    sd = torch.load(str(ckpt_path), map_location="cuda")
-    if isinstance(sd, dict):
-        sd = {(k[len("_orig_mod.") :] if k.startswith("_orig_mod.") else k): v for k, v in sd.items()}
     model.load_state_dict(sd, assign=True)
     model = model.cuda().eval()
 
