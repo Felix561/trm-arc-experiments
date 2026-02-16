@@ -376,6 +376,7 @@ def main() -> None:
     ap.add_argument("--batch_size", type=int, default=768)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--max_steps", type=int, default=16)
+    ap.add_argument("--max_batches", type=int, default=0, help="Process at most N batches (0 = all)")
     ap.add_argument("--forward_dtype", choices=["bfloat16", "float16", "float32"], default="bfloat16")
     ap.add_argument("--filter_official_eval", choices=["v1", "v2", "concept"], default="v2")
     ap.add_argument("--halt_logit_threshold", type=float, default=0.0)
@@ -642,6 +643,9 @@ def main() -> None:
         del batch, batch_cpu, carry, all_preds
         if processed_batches % 100 == 0:
             torch.cuda.empty_cache()
+        if int(args.max_batches) > 0 and processed_batches >= int(args.max_batches):
+            print(f"[limit] stopping early at max_batches={args.max_batches}")
+            break
 
     wall_infer = time.time() - start_wall
 

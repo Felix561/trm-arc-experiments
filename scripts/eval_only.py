@@ -154,6 +154,7 @@ def main() -> None:
     ap.add_argument("--batch_size", type=int, default=768, help="Global batch size (TRM-specific)")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--max_steps", type=int, default=16, help="Outer refinement steps")
+    ap.add_argument("--max_batches", type=int, default=0, help="Process at most N batches (0 = all)")
     ap.add_argument("--forward_dtype", choices=["bfloat16", "float16", "float32"], default="bfloat16")
     ap.add_argument("--filter_official_eval", choices=["v1", "v2", "concept"], default=None)
     ap.add_argument("--disable_compile", action="store_true", help="Disable torch.compile")
@@ -320,6 +321,9 @@ def main() -> None:
             del batch, batch_cpu, carry, preds_last, labels
             if num_batches % 100 == 0:
                 torch.cuda.empty_cache()
+            if int(args.max_batches) > 0 and num_batches >= int(args.max_batches):
+                print(f"[limit] stopping early at max_batches={args.max_batches}")
+                break
 
     wall = time.time() - t0
 
