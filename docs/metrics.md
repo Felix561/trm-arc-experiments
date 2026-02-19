@@ -12,7 +12,7 @@ ARC evaluation numbers are easy to mis-compare. This repo uses two common averag
 - Unless explicitly stated otherwise, metrics in this repository are reported as **fractions in `[0,1]`**.
 - Always report the full metric name, for example:
   - `ARC/pass@2` (per-task averaging),
-  - `ARC/pass@2_per_output` (per-output averaging)(offizal ARC score).
+  - `ARC/pass@2_per_output` (per-output averaging) (official ARC score).
 
 ## Official eval filtering
 

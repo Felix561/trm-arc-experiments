@@ -166,6 +166,7 @@ def main() -> None:
     ap.add_argument("--forward_dtype", choices=["bfloat16", "float16", "float32"], default="bfloat16")
     ap.add_argument("--filter_official_eval", choices=["v1", "v2", "concept"], default=None)
     ap.add_argument("--disable_compile", action="store_true", help="Disable torch.compile")
+    ap.add_argument("--device", choices=["cuda", "cpu"], default="cuda", help="Device for model inference")
     ap.add_argument("--no_sha256", action="store_true", help="Skip checkpoint sha256 computation")
     ap.add_argument("--no_submission", action="store_true", help="Do not write submission.json (faster, smaller)")
     args = ap.parse_args()
@@ -189,6 +190,10 @@ def main() -> None:
 
     out_dir = Path(args.output_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
+
+    device = str(args.device)
+    if device == "cuda" and not torch.cuda.is_available():
+        raise SystemExit("--device=cuda requested but CUDA is not available. Use --device=cpu on this machine.")
 
     # Dataset
     dataset = PuzzleDataset(
@@ -215,7 +220,7 @@ def main() -> None:
 
     # Load checkpoint early so we can adapt embedding table size if needed.
     ckpt_path = Path(args.checkpoint)
-    sd = torch.load(str(ckpt_path), map_location="cuda")
+    sd = torch.load(str(ckpt_path), map_location=device)
     if isinstance(sd, dict):
         sd = _strip_orig_mod_prefix(sd)
 
@@ -253,13 +258,12 @@ def main() -> None:
     )
     model_cls = load_model_class("recursive_reasoning.trm@TinyRecursiveReasoningModel_ACTV1")
     loss_cls = load_model_class("losses@ACTLossHead")
-    with torch.device("cuda"):
-        model = model_cls(model_cfg)
-        model = loss_cls(model, loss_type="stablemax_cross_entropy")
+    model = model_cls(model_cfg)
+    model = loss_cls(model, loss_type="stablemax_cross_entropy")
 
     # Load checkpoint weights
     model.load_state_dict(sd, assign=True)
-    model = model.cuda().eval()
+    model = model.to(device).eval()
 
     if (not args.disable_compile) and ("DISABLE_COMPILE" not in os.environ):
         try:
@@ -311,9 +315,8 @@ def main() -> None:
         for _set_name, batch_cpu, _gb in loader:
             num_batches += 1
             num_examples += int(batch_cpu["inputs"].shape[0])
-            batch = {k: v.cuda(non_blocking=True) for k, v in batch_cpu.items()}
-            with torch.device("cuda"):
-                carry = model.initial_carry(batch)
+            batch = {k: v.to(device, non_blocking=(device == "cuda")) for k, v in batch_cpu.items()}
+            carry = model.initial_carry(batch)
             preds_last = None
             labels = batch.get("labels")
             if labels is None:
@@ -338,7 +341,7 @@ def main() -> None:
             assert preds_last is not None
             evaluator.update_batch(batch, preds_last)
             del batch, batch_cpu, carry, preds_last, labels
-            if num_batches % 100 == 0:
+            if device == "cuda" and num_batches % 100 == 0:
                 torch.cuda.empty_cache()
             if int(args.max_batches) > 0 and num_batches >= int(args.max_batches):
                 print(f"[limit] stopping early at max_batches={args.max_batches}")
@@ -417,6 +420,7 @@ def main() -> None:
             "batch_size": int(args.batch_size),
             "seed": int(args.seed),
             "max_steps": int(args.max_steps),
+            "device": device,
             "filter_official_eval": args.filter_official_eval,
             "num_batches": int(num_batches),
             "num_examples": int(num_examples),
