@@ -1,24 +1,34 @@
-## TRM ARC evaluation & test-time voting experiments
+# TRM ARC experiments (structured release)
 
-This repository is a small, reproducible research artifact around **Tiny Recursive Models (TRM)** on ARC.
-It focuses on **measurement correctness** and **test-time aggregation** (no training), plus one explicitly
-reported **negative result** (structured prefix embeddings did not reliably improve evaluation metrics in our runs).
+This repository is the public, reproducible TRM experiment package. It is organized around three experiment groups:
 
-### What this repo contains
+1. **Reproduction of ARC Prize TRM baselines** (v1 and v2 checkpoints)
+2. **Test-time experiments on v2** (outer-loop dynamics, halting, pooling, advanced rescoring/voting)
+3. **Base_Task_id / structured-prefix finetune direction** (negative/inconclusive in our runs, documented explicitly)
 
-- **TRM-EXP-01** (`trm_reproduce_arcprize_verification`): reproduce published TRM checkpoint evaluation behavior on ARC splits.
-- **TRM-EXP-02** (`trm_test_time_voting`): test-time voting/selection variants (step selection, pooling, PoE/NLL rescoring).
-- **TRM-EXP-03** (`trm_structured_prefix_program_embeddings_negative`): negative/inconclusive result writeup for structured prefix “program” embeddings.
+The goal is to keep the workflow scientific and auditable: clear experiment identity, deterministic scripts, compact reports, and traceable artifacts.
+
+## Experiment structure (matches local research structure)
+
+- **TRM-EXP-01 — Reproduction (v1 + v2)**  
+  Reproduce baseline checkpoint evaluation for ARC-AGI-1 and ARC-AGI-2.
+- **TRM-EXP-02 — Test-time experiments (v2)**  
+  2.1 Track performance vs outer loop step and report theoretical best step.  
+  2.2 Evaluate halting-head-based early-stop selection and halt-step distribution.  
+  2.3 Pool candidates across all outer loops and compare voting performance.  
+  2.4 Advanced rescoring/voting variants (TRM NLL/PoE and mdlARC-based rescoring in supplementary internal runs).
+- **TRM-EXP-03 — Base_Task_id structured prefix finetune**  
+  Prefix slots with augmentation-factor embeddings + base-task program tokens + zero slots; reported as negative/inconclusive in this public release.
 
 Upstream model code is referenced as a pinned dependency under `third_party/TinyRecursiveModels` (see below).
 
-### Quickstart (Linux)
+## Quickstart (Linux)
 
 Clone with submodules:
 
 ```bash
 git clone --recurse-submodules https://github.com/Felix561/trm-arc-experiments
-cd public_trm_experiments
+cd trm-arc-experiments
 ```
 
 Create env and install deps:
@@ -41,7 +51,7 @@ Sanity-check:
 python scripts/doctor.py
 ```
 
-### Get checkpoints and build datasets
+## Get checkpoints and build datasets
 
 Fetch ARC Prize verification checkpoints from Hugging Face:
 
@@ -60,9 +70,9 @@ python scripts/build_trm_dataset.py \
   --num_aug 1000
 ```
 
-### Run experiments
+## Run experiments
 
-- **TRM-EXP-01 (baseline eval)**:
+- **TRM-EXP-01 (baseline eval, v2 example)**:
 
 ```bash
 python scripts/eval_only.py \
@@ -72,7 +82,17 @@ python scripts/eval_only.py \
   --filter_official_eval v2
 ```
 
-- **TRM-EXP-02 (test-time voting matrix)**:
+- **TRM-EXP-01 (baseline eval, v1 example)**:
+
+```bash
+python scripts/eval_only.py \
+  --checkpoint assets/checkpoints/arc_v1_public/step_700000 \
+  --data_path data/arc1-aug-1000 \
+  --output_dir runs/trm_exp_01_arc1_eval \
+  --filter_official_eval v1
+```
+
+- **TRM-EXP-02 (test-time voting matrix, v2)**:
 
 ```bash
 python scripts/eval_voting.py \
@@ -94,26 +114,74 @@ python scripts/eval_voting_advanced.py \
   --enable_rescore
 ```
 
-### Results snapshots (small, committed artifacts)
+For detailed mapping of 2.1/2.2/2.3/2.4 to concrete outputs, see:
+
+- `experiments/TRM-EXP-02_trm_test_time_voting/README.md`
+
+## TRM-EXP-03 status (Base_Task_id finetune direction)
+
+The public v1 repo keeps TRM-EXP-03 as a documented negative/inconclusive direction with compact results.
+The full training/fine-tune pipeline for this direction remains in supplementary internal code and is summarized in:
+
+- `experiments/TRM-EXP-03_trm_structured_prefix_program_embeddings_negative/README.md`
+
+## Results snapshots (small, committed artifacts)
 
 This repo keeps large artifacts (datasets/checkpoints/full runs) out of git. A small set of
 result summaries live under `reports/`.
 For full reproducibility, rerun experiments locally to regenerate JSON reports under `runs/`.
 
-### Notes on metrics
+Current committed run snapshots:
+
+- `reports/TRM-EXP-01/runs/v1_baseline/` (ARC-AGI-1 baseline reproduction)
+- `reports/TRM-EXP-01/runs/v2_baseline/` (ARC-AGI-2 baseline reproduction)
+- `reports/TRM-EXP-02/runs/v2_2.1_2.2_2.3/` (outer-loop tracking + halting + pooled-candidate analysis)
+- `reports/TRM-EXP-02/runs/v2_rescore_trm/` (advanced rescoring variants centered on TRM scoring)
+- `reports/TRM-EXP-02/runs/v2_rescore_mdlarc/` (advanced rescoring variants including mdlARC-based scorer track)
+- `reports/TRM-EXP-03/runs/base_task_id_finetune_v1/` (Base_Task_id structured-prefix finetune logs/curves)
+
+## Key findings (current snapshot)
+
+From committed report artifacts in `reports/`:
+all metric values below are reported as ARC-style fractions in `[0,1]` (not percentages).
+
+- **TRM-EXP-01 baseline reproduction**
+  - v1 baseline (`reports/TRM-EXP-01/runs/v1_baseline/eval_report.json`): `pass@2 = 0.4438`
+  - v2 baseline (`reports/TRM-EXP-01/runs/v2_baseline/eval_report.json`): `pass@2 = 0.0458`
+  - details and reproduction caveat: `experiments/TRM-EXP-01_trm_reproduce_arcprize_verification/README.md`
+
+- **TRM-EXP-02 test-time experiments (v2)**
+  - baseline last-step voting (`v2_2.1_2.2_2.3`): `pass@2_per_output = 0.0523`
+  - best fixed step (hindsight, theoretical upper bound in this run): `0.0581` at step `2`
+  - halting-head early stop (`halt_logit_threshold = 0.0`): `0.0465` (worse than baseline)
+  - pooled all-steps voting: `0.0465` (worse than baseline)
+  - TRM NLL/PoE rescoring (`v2_rescore_trm`): `0.0523` (no gain over baseline)
+  - mdlARC rescoring (`v2_rescore_mdlarc`):
+    - mdlARC NLL: `0.0116` (degrades),
+    - mdlARC PoE: **`0.0640`** (best in this experiment family)
+
+- **TRM-EXP-03 structured-prefix finetune**
+  - promising internal training curves in some runs, but no robust evaluation gain in this compute budget,
+  - currently documented as negative/inconclusive with explicit compute caveats.
+
+## Notes on metrics
 
 ARC numbers can differ depending on averaging definition and filtering.
 See `docs/metrics.md` for the definitions used here.
 
-### Upstream dependencies
+## Sources used in this repository
 
 - TRM upstream: [`SamsungSAILMontreal/TinyRecursiveModels`](https://github.com/SamsungSAILMontreal/TinyRecursiveModels) (MIT).
   This repo expects it under `third_party/TinyRecursiveModels/` (git submodule).
   Recommended pinned commit for v1 of this repo: `7de0d20c8f26df706e2c7b3a21ceaf0b3542c953`.
 - Checkpoints: [`arcprize/trm_arc_prize_verification`](https://huggingface.co/arcprize/trm_arc_prize_verification).
+- Official ARC-AGI-2 task repository (reference): [`arcprize/ARC-AGI-2`](https://github.com/arcprize/ARC-AGI-2).
+- For the evaluations reported in this repository, task files are built from the upstream TRM `kaggle/combined/arc-agi` inputs.
+- External rescoring source used in TRM-EXP-02: [`mvakde/mdlARC`](https://github.com/mvakde/mdlARC) (reference-only in this repo; no vendored code).
+- PoE reference used for TRM-EXP-02 interpretation: [Product of Experts with LLMs: Boosting Performance on ARC Is a Matter of Perspective](https://arxiv.org/pdf/2505.07859).
+- See also `THIRD_PARTY_NOTICES.md` for license/terms pointers.
 
-### License
+## License
 
 - Code/docs in this repo: MIT (see `LICENSE`).
 - Third-party components: see `THIRD_PARTY_NOTICES.md`.
-

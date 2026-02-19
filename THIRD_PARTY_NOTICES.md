@@ -25,3 +25,15 @@ This repository does **not** commit large dataset files by default. Datasets are
 built locally. You are responsible for complying with the dataset licenses/terms for any sources
 you download.
 
+## External scorer/reference used in TRM-EXP-02
+
+- **Project**: mdlARC
+- **Upstream**: `https://github.com/mvakde/mdlARC`
+- **How used**: referenced as an external rescoring backend for reported TRM candidate rescoring results.
+- **Included in this repo**: no (reference only; no vendored mdlARC source code).
+
+## Literature reference used in experiment interpretation
+
+- **Paper**: Product of Experts with LLMs: Boosting Performance on ARC Is a Matter of Perspective
+- **Link**: `https://arxiv.org/pdf/2505.07859`
+- **How used**: conceptual reference for PoE-style multi-view rescoring discussion.

@@ -1,4 +1,4 @@
-## Metrics and protocol notes
+# Metrics and protocol notes
 
 ARC evaluation numbers are easy to mis-compare. This repo uses two common averaging conventions:
 
@@ -7,7 +7,14 @@ ARC evaluation numbers are easy to mis-compare. This repo uses two common averag
 - **Per-output averaging** (`pass@K_per_output`): compute correctness over every test output (task, test input)
   equally, then average across all outputs.
 
-### Official eval filtering
+## Units and naming (important)
+
+- Unless explicitly stated otherwise, metrics in this repository are reported as **fractions in `[0,1]`**.
+- Always report the full metric name, for example:
+  - `ARC/pass@2` (per-task averaging),
+  - `ARC/pass@2_per_output` (per-output averaging)(offizal ARC score).
+
+## Official eval filtering
 
 Some datasets are mixtures (e.g., ARC-AGI-2 + ConceptARC). When reporting numbers intended to compare to
 public benchmarks, it is important to evaluate only the intended task list.
@@ -15,7 +22,7 @@ public benchmarks, it is important to evaluate only the intended task list.
 Scripts in this repo expose a `--filter_official_eval {v1,v2,concept}` option which filters by task IDs
 loaded from the upstream TRM JSON lists.
 
-### What to report in papers/issues
+## What to report in papers/issues
 
 When reporting a number from this repo, always include:
 
@@ -25,3 +32,6 @@ When reporting a number from this repo, always include:
 - any filtering (`--filter_official_eval`)
 - the script version (git commit)
 
+Recommended compact reporting format:
+
+`<metric_key>=<value_fraction> (<value_percent>%), checkpoint=<id>, data=<build_tag>, filter=<v1|v2|concept>`

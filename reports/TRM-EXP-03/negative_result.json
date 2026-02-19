@@ -2,7 +2,8 @@
   "experiment_id": "TRM-EXP-03",
   "slug": "trm_structured_prefix_program_embeddings_negative",
   "status": "negative_or_inconclusive",
-  "summary": "Structured-prefix slot factorization and prefix-only finetuning did not produce reliable evaluation gains in our runs; some pass@K metrics were flat-to-worse. This snapshot exists to document the direction and prevent repeated effort.",
-  "recommended_next_step": "If revisiting, pre-register an eval protocol (choose step/hyperparams on a dev set, report once on eval2), and attach full dataset+checkpoint fingerprints for each run."
+  "summary": "We tested structured prefix slot factorization (UUID + augmentation slots + base-task slots) to encourage more shared task representations across augmentations. Under our explored settings, gains were not reliable and metrics were mostly flat-to-worse versus baseline.",
+  "compute_caveat": "Many runs were compute-limited (often short-to-mid length, e.g. ~30k-50k steps), so this should be interpreted as directional rather than definitive.",
+  "recommended_next_step": "If revisiting, run longer controlled sweeps with fixed evaluation protocol, report per-ablation fingerprints, and test whether improvements emerge only after longer finetune horizons."
 }
 
