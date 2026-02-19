@@ -133,12 +133,11 @@ For full reproducibility, rerun experiments locally to regenerate JSON reports u
 
 Current committed run snapshots:
 
-- `reports/TRM-EXP-01/runs/v1_baseline/` (ARC-AGI-1 baseline reproduction)
-- `reports/TRM-EXP-01/runs/v2_baseline/` (ARC-AGI-2 baseline reproduction)
-- `reports/TRM-EXP-02/runs/v2_2.1_2.2_2.3/` (outer-loop tracking + halting + pooled-candidate analysis)
-- `reports/TRM-EXP-02/runs/v2_rescore_trm/` (advanced rescoring variants centered on TRM scoring)
-- `reports/TRM-EXP-02/runs/v2_rescore_mdlarc/` (advanced rescoring variants including mdlARC-based scorer track)
-- `reports/TRM-EXP-03/runs/base_task_id_finetune_v1/` (Base_Task_id structured-prefix finetune logs/curves)
+- `reports/TRM-EXP-01/results.json` (ARC-AGI-1/2 baseline reproduction snapshot)
+- `reports/TRM-EXP-02/results.json` (outer-loop/halting/pooling/rescoring snapshot)
+- `reports/TRM-EXP-03/negative_result.json` (Base_Task_id structured-prefix finetune snapshot)
+
+The more detailed `runs/...` tree referenced below is produced during local reruns and is intentionally not committed.
 
 ## Key findings (current snapshot)
 
@@ -146,8 +145,8 @@ From committed report artifacts in `reports/`:
 all metric values below are reported as ARC-style fractions in `[0,1]` (not percentages).
 
 - **TRM-EXP-01 baseline reproduction**
-  - v1 baseline (`reports/TRM-EXP-01/runs/v1_baseline/eval_report.json`): `pass@2 = 0.4438`
-  - v2 baseline (`reports/TRM-EXP-01/runs/v2_baseline/eval_report.json`): `pass@2 = 0.0458`
+  - v1 baseline (`reports/TRM-EXP-01/results.json`): `pass@2 = 0.4438`
+  - v2 baseline (`reports/TRM-EXP-01/results.json`): `pass@2 = 0.0458`
   - details and reproduction caveat: `experiments/TRM-EXP-01_trm_reproduce_arcprize_verification/README.md`
 
 - **TRM-EXP-02 test-time experiments (v2)**
