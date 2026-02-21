@@ -25,10 +25,13 @@ loaded from the upstream TRM JSON lists.
 For `scripts/eval_only.py` on v2, the source is configurable:
 
 - default: `--official_v2_source kaggle_combined` (existing behavior, TRM `kaggle/combined` list)
-- optional: `--official_v2_source arc_agi2_github` (downloads `arcprize/ARC-AGI-2/data/evaluation.txt`, caches locally)
+- optional: `--official_v2_source arc_agi2_github` (downloads `arcprize/ARC-AGI-2/data/evaluation.txt` and `data/evaluation/<task_id>.json`, caches locally)
 
-When filtering is enabled, `eval_report.json` stores `metadata.official_eval_details` with source/path and
-counts for kept/dropped/missing task IDs to make protocol differences auditable.
+In `arc_agi2_github` mode, scoring uses the official puzzle JSON `test` pairs from ARC-AGI-2,
+not only a task-ID filter over TRM's `test_puzzles.json`.
+
+When filtering/scoring is enabled, `eval_report.json` stores `metadata.official_eval_details` with source/path and
+task/pair overlap counts to make protocol differences auditable.
 
 ## What to report in papers/issues
 

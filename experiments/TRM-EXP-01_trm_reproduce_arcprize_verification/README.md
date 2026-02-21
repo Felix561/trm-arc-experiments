@@ -35,7 +35,7 @@ python scripts/eval_only.py \
   --filter_official_eval v2
 ```
 
-Optional comparison run (same dataset/checkpoint, but v2 filter list from the official ARC-AGI-2 GitHub repo):
+Optional comparison run (same dataset/checkpoint, but v2 scoring puzzles from the official ARC-AGI-2 GitHub repo):
 
 ```bash
 python scripts/eval_only.py \
@@ -48,8 +48,8 @@ python scripts/eval_only.py \
 
 Notes:
 - Default remains `--official_v2_source kaggle_combined` for backward compatibility.
-- The GitHub list is auto-downloaded from `arcprize/ARC-AGI-2` (`data/evaluation.txt`) and cached locally.
-- `eval_report.json` includes `metadata.official_eval_details` with source, file path/URL, and keep/drop counts.
+- In `arc_agi2_github` mode, `eval_only.py` downloads both `data/evaluation.txt` and `data/evaluation/<task_id>.json` and scores against those official `test` pairs (not only task IDs).
+- `eval_report.json` includes `metadata.official_eval_details` with source paths/URLs and task/pair overlap diagnostics.
 
 ## Reproduce v1 (ARC-AGI-1 public eval)
 
@@ -83,7 +83,7 @@ Most likely causes include protocol/data differences, for example:
 - subtle filtering differences (often discussed as a small +5 task delta in some combined/Kaggle ARC-AGI-2 exports),
 - implementation details in metric aggregation.
 
-For clarity: the baseline evaluations reported in this repository use the Kaggle-combined files provided by the TRM upstream repository (`kaggle/combined/arc-agi`) as the default path. The v2 filter list can now also be sourced from `arcprize/ARC-AGI-2` via `--official_v2_source arc_agi2_github` for direct comparison.
+For clarity: the baseline evaluations reported in this repository use the Kaggle-combined files provided by the TRM upstream repository (`kaggle/combined/arc-agi`) as the default path. For direct comparison, v2 can be scored against the original `arcprize/ARC-AGI-2` evaluation puzzles via `--official_v2_source arc_agi2_github`.
 
 In this repository we publish run artifacts and fingerprints explicitly, so any difference can be audited.
 

@@ -49,7 +49,7 @@ def _sha256_file(path: Path, chunk_size: int = 8 * 1024 * 1024) -> str:
     return h.hexdigest()
 
 
-def _download_text_with_cache(url: str, cache_path: Path, force_refresh: bool) -> Tuple[Path, bool]:
+def _download_with_cache(url: str, cache_path: Path, force_refresh: bool) -> Tuple[Path, bool]:
     cache_path.parent.mkdir(parents=True, exist_ok=True)
     if cache_path.exists() and not force_refresh:
         return cache_path, False
@@ -84,55 +84,141 @@ def _load_task_ids_from_text(path: Path) -> Set[str]:
         for line in f:
             line = line.strip()
             if line and (not line.startswith("#")):
+                if line.endswith(".json"):
+                    line = line[:-5]
                 out.add(line)
     return out
 
 
-def _load_official_eval_task_ids(
+def _count_test_pairs(test_puzzles: Dict[str, Any]) -> int:
+    return int(sum(len(p.get("test", [])) for p in test_puzzles.values()))
+
+
+def _task_test_input_hashes(puzzle: Dict[str, Any]) -> Set[str]:
+    out: Set[str] = set()
+    for pair in puzzle.get("test", []):
+        out.add(grid_hash(arc_grid_to_np(pair["input"])))
+    return out
+
+
+def _load_arc_agi2_eval_puzzles(
+    arc_agi2_eval_list: Optional[Path],
+    arc_agi2_eval_dir: Optional[Path],
+    arc_agi2_ref: str,
+    arc_agi2_cache_dir: Path,
+    refresh_arc_agi2_eval: bool,
+) -> Tuple[Optional[Set[str]], Optional[Dict[str, Any]], Dict[str, Any]]:
+    safe_ref = arc_agi2_ref.replace("/", "__")
+    ref_cache_dir = arc_agi2_cache_dir / safe_ref
+    meta: Dict[str, Any] = {
+        "source": "arc_agi2_github",
+        "arc_agi2_ref": str(arc_agi2_ref),
+        "task_list_path": None,
+        "task_list_url": None,
+        "task_json_root": None,
+        "downloaded_files": 0,
+    }
+
+    if arc_agi2_eval_list is not None:
+        task_list_path = arc_agi2_eval_list
+    else:
+        task_list_path = ref_cache_dir / "evaluation.txt"
+        task_list_url = f"https://raw.githubusercontent.com/arcprize/ARC-AGI-2/{arc_agi2_ref}/data/evaluation.txt"
+        meta["task_list_url"] = task_list_url
+        try:
+            task_list_path, downloaded = _download_with_cache(
+                url=task_list_url,
+                cache_path=task_list_path,
+                force_refresh=bool(refresh_arc_agi2_eval),
+            )
+            meta["downloaded_files"] = int(meta["downloaded_files"]) + int(downloaded)
+        except Exception as e:
+            meta["error"] = f"Failed to fetch evaluation list: {e}"
+            return None, None, meta
+
+    meta["task_list_path"] = str(task_list_path)
+    if not task_list_path.exists():
+        meta["error"] = f"Task list does not exist: {task_list_path}"
+        return None, None, meta
+
+    task_ids = _load_task_ids_from_text(task_list_path)
+    if not task_ids:
+        meta["error"] = f"Task list is empty: {task_list_path}"
+        return None, None, meta
+
+    if arc_agi2_eval_dir is not None:
+        eval_dir = arc_agi2_eval_dir
+        if not eval_dir.exists():
+            meta["error"] = f"ARC-AGI-2 eval dir does not exist: {eval_dir}"
+            return None, None, meta
+        meta["task_json_root"] = str(eval_dir)
+    else:
+        eval_dir = ref_cache_dir / "evaluation"
+        meta["task_json_root"] = str(eval_dir)
+
+    test_puzzles: Dict[str, Any] = {}
+    for task_id in sorted(task_ids):
+        if arc_agi2_eval_dir is not None:
+            task_path = eval_dir / f"{task_id}.json"
+            if not task_path.exists():
+                meta["error"] = f"Missing task JSON for {task_id}: {task_path}"
+                return None, None, meta
+        else:
+            task_path = eval_dir / f"{task_id}.json"
+            task_url = f"https://raw.githubusercontent.com/arcprize/ARC-AGI-2/{arc_agi2_ref}/data/evaluation/{task_id}.json"
+            try:
+                task_path, downloaded = _download_with_cache(
+                    url=task_url,
+                    cache_path=task_path,
+                    force_refresh=bool(refresh_arc_agi2_eval),
+                )
+                meta["downloaded_files"] = int(meta["downloaded_files"]) + int(downloaded)
+            except Exception as e:
+                meta["error"] = f"Failed to fetch task JSON for {task_id}: {e}"
+                return None, None, meta
+
+        with task_path.open("r", encoding="utf-8") as f:
+            puzzle = json.load(f)
+        if not isinstance(puzzle, dict) or ("test" not in puzzle):
+            meta["error"] = f"Invalid task JSON format for {task_id}: {task_path}"
+            return None, None, meta
+        test_puzzles[task_id] = puzzle
+
+    meta["official_task_count"] = int(len(task_ids))
+    meta["official_test_pair_count"] = int(_count_test_pairs(test_puzzles))
+    return task_ids, test_puzzles, meta
+
+
+def _load_official_eval_bundle(
     trm_root: Path,
     eval_version: str,
     official_v2_source: str,
     arc_agi2_eval_list: Optional[Path],
+    arc_agi2_eval_dir: Optional[Path],
     arc_agi2_ref: str,
     arc_agi2_cache_dir: Path,
     refresh_arc_agi2_eval: bool,
-) -> Tuple[Optional[Set[str]], Dict[str, Any]]:
+) -> Tuple[Optional[Set[str]], Optional[Dict[str, Any]], Dict[str, Any]]:
     meta: Dict[str, Any] = {
         "eval_version": str(eval_version),
         "source": None,
         "task_list_path": None,
         "task_list_url": None,
-        "downloaded_now": False,
+        "task_json_root": None,
+        "downloaded_files": 0,
     }
 
     combined = trm_root / "kaggle" / "combined"
     if eval_version == "v2" and official_v2_source == "arc_agi2_github":
-        meta["source"] = "arc_agi2_github"
-        if arc_agi2_eval_list is not None:
-            p = arc_agi2_eval_list
-            meta["task_list_path"] = str(p)
-            if not p.exists():
-                meta["error"] = f"File does not exist: {p}"
-                return None, meta
-            return _load_task_ids_from_text(p), meta
-
-        safe_ref = arc_agi2_ref.replace("/", "__")
-        p = arc_agi2_cache_dir / f"evaluation_{safe_ref}.txt"
-        url = f"https://raw.githubusercontent.com/arcprize/ARC-AGI-2/{arc_agi2_ref}/data/evaluation.txt"
-        meta["task_list_url"] = url
-        meta["task_list_path"] = str(p)
-        try:
-            p, downloaded_now = _download_text_with_cache(
-                url=url,
-                cache_path=p,
-                force_refresh=bool(refresh_arc_agi2_eval),
-            )
-            meta["task_list_path"] = str(p)
-            meta["downloaded_now"] = bool(downloaded_now)
-            return _load_task_ids_from_text(p), meta
-        except Exception as e:
-            meta["error"] = str(e)
-            return None, meta
+        task_ids, official_test_puzzles, gh_meta = _load_arc_agi2_eval_puzzles(
+            arc_agi2_eval_list=arc_agi2_eval_list,
+            arc_agi2_eval_dir=arc_agi2_eval_dir,
+            arc_agi2_ref=arc_agi2_ref,
+            arc_agi2_cache_dir=arc_agi2_cache_dir,
+            refresh_arc_agi2_eval=refresh_arc_agi2_eval,
+        )
+        meta.update(gh_meta)
+        return task_ids, official_test_puzzles, meta
 
     meta["source"] = "kaggle_combined"
     if eval_version == "v2":
@@ -146,8 +232,8 @@ def _load_official_eval_task_ids(
     meta["task_list_path"] = str(p)
     if not p.exists():
         meta["error"] = f"File does not exist: {p}"
-        return None, meta
-    return _load_task_ids_from_json(p), meta
+        return None, None, meta
+    return _load_task_ids_from_json(p), None, meta
 
 
 def _strip_orig_mod_prefix(sd: Dict[str, Any]) -> Dict[str, Any]:
@@ -254,12 +340,17 @@ def main() -> None:
         "--official_v2_source",
         choices=["kaggle_combined", "arc_agi2_github"],
         default="kaggle_combined",
-        help="Task ID source for --filter_official_eval v2 (default: kaggle_combined)",
+        help="Evaluation source for --filter_official_eval v2 (task IDs + scored test pairs)",
     )
     ap.add_argument(
         "--arc_agi2_eval_list",
         default=None,
         help="Optional local path to ARC-AGI-2 data/evaluation.txt (only for --official_v2_source arc_agi2_github)",
+    )
+    ap.add_argument(
+        "--arc_agi2_eval_dir",
+        default=None,
+        help="Optional local path to ARC-AGI-2 data/evaluation/ directory with <task_id>.json files",
     )
     ap.add_argument(
         "--arc_agi2_ref",
@@ -297,6 +388,12 @@ def main() -> None:
         arc_agi2_eval_list = Path(str(args.arc_agi2_eval_list)).expanduser()
         if not arc_agi2_eval_list.is_absolute():
             arc_agi2_eval_list = repo_root / arc_agi2_eval_list
+
+    arc_agi2_eval_dir: Optional[Path] = None
+    if args.arc_agi2_eval_dir:
+        arc_agi2_eval_dir = Path(str(args.arc_agi2_eval_dir)).expanduser()
+        if not arc_agi2_eval_dir.is_absolute():
+            arc_agi2_eval_dir = repo_root / arc_agi2_eval_dir
 
     # Imports from TRM
     from puzzle_dataset import PuzzleDataset, PuzzleDatasetConfig  # type: ignore
@@ -404,29 +501,67 @@ def main() -> None:
     # Optional official filtering
     filter_details: Dict[str, Any] = {}
     if args.filter_official_eval is not None:
-        official, filter_details = _load_official_eval_task_ids(
+        official_task_ids, official_test_puzzles, filter_details = _load_official_eval_bundle(
             trm_root=trm_root,
             eval_version=str(args.filter_official_eval),
             official_v2_source=str(args.official_v2_source),
             arc_agi2_eval_list=arc_agi2_eval_list,
+            arc_agi2_eval_dir=arc_agi2_eval_dir,
             arc_agi2_ref=str(args.arc_agi2_ref),
             arc_agi2_cache_dir=arc_agi2_cache_dir,
             refresh_arc_agi2_eval=bool(args.refresh_arc_agi2_eval),
         )
-        if official is not None:
-            dataset_task_ids = set(str(k) for k in evaluator.test_puzzles.keys())
-            kept_ids = dataset_task_ids & official
-            dropped_ids = dataset_task_ids - official
-            missing_from_dataset = official - dataset_task_ids
-            evaluator.test_puzzles = {k: v for k, v in evaluator.test_puzzles.items() if k in official}
+        if official_task_ids is not None:
+            dataset_test_puzzles_before = dict(evaluator.test_puzzles)
+            dataset_task_ids = set(str(k) for k in dataset_test_puzzles_before.keys())
+            kept_ids = dataset_task_ids & official_task_ids
+            dropped_ids = dataset_task_ids - official_task_ids
+            missing_from_dataset = official_task_ids - dataset_task_ids
+
+            if official_test_puzzles is not None:
+                evaluator.test_puzzles = dict(official_test_puzzles)
+                filter_mode = "replace_test_puzzles"
+            else:
+                evaluator.test_puzzles = {k: v for k, v in dataset_test_puzzles_before.items() if k in official_task_ids}
+                filter_mode = "task_id_filter_only"
+
+            scored_task_ids = set(str(k) for k in evaluator.test_puzzles.keys())
+            scored_pair_count = _count_test_pairs(evaluator.test_puzzles)
+            dataset_pair_count_before = _count_test_pairs(dataset_test_puzzles_before)
+
+            dataset_extra_inputs_vs_official = 0
+            dataset_missing_inputs_vs_official = 0
+            task_input_mismatch: list[str] = []
+            if official_test_puzzles is not None:
+                for task_id in sorted(dataset_task_ids & official_task_ids):
+                    dp = dataset_test_puzzles_before.get(task_id)
+                    op = official_test_puzzles.get(task_id)
+                    if dp is None or op is None:
+                        continue
+                    d_inputs = _task_test_input_hashes(dp)
+                    o_inputs = _task_test_input_hashes(op)
+                    extra = len(d_inputs - o_inputs)
+                    missing = len(o_inputs - d_inputs)
+                    dataset_extra_inputs_vs_official += int(extra)
+                    dataset_missing_inputs_vs_official += int(missing)
+                    if extra or missing:
+                        task_input_mismatch.append(str(task_id))
 
             filter_details.update(
                 {
-                    "official_task_count": int(len(official)),
+                    "filter_mode": filter_mode,
+                    "official_task_count": int(len(official_task_ids)),
                     "dataset_task_count_before_filter": int(len(dataset_task_ids)),
                     "kept_task_count": int(len(kept_ids)),
                     "dropped_task_count": int(len(dropped_ids)),
                     "missing_official_ids_in_dataset_count": int(len(missing_from_dataset)),
+                    "dataset_test_pair_count_before_filter": int(dataset_pair_count_before),
+                    "scored_task_count": int(len(scored_task_ids)),
+                    "scored_test_pair_count": int(scored_pair_count),
+                    "dataset_extra_test_inputs_vs_official_count": int(dataset_extra_inputs_vs_official),
+                    "dataset_missing_test_inputs_vs_official_count": int(dataset_missing_inputs_vs_official),
+                    "task_test_input_mismatch_count": int(len(task_input_mismatch)),
+                    "task_test_input_mismatch_sample": sorted(task_input_mismatch)[:5],
                     "dropped_task_sample": sorted(list(dropped_ids))[:5],
                     "missing_official_id_sample": sorted(list(missing_from_dataset))[:5],
                 }
@@ -434,14 +569,28 @@ def main() -> None:
             print(
                 "[filter] "
                 f"source={filter_details.get('source')} "
-                f"official={len(official)} "
+                f"mode={filter_mode} "
+                f"official_tasks={len(official_task_ids)} "
                 f"dataset_before={len(dataset_task_ids)} "
                 f"kept={len(kept_ids)} "
                 f"dropped={len(dropped_ids)} "
-                f"missing_official_in_dataset={len(missing_from_dataset)}"
+                f"missing_official_in_dataset={len(missing_from_dataset)} "
+                f"pairs_before={dataset_pair_count_before} "
+                f"pairs_scored={scored_pair_count}"
             )
-            if filter_details.get("downloaded_now"):
-                print(f"[filter] downloaded official v2 list to {filter_details.get('task_list_path')}")
+            if int(filter_details.get("downloaded_files", 0)) > 0:
+                print(
+                    "[filter] "
+                    f"downloaded_files={filter_details.get('downloaded_files')} "
+                    f"task_list={filter_details.get('task_list_path')} "
+                    f"task_json_root={filter_details.get('task_json_root')}"
+                )
+            if official_test_puzzles is not None and (dataset_extra_inputs_vs_official or dataset_missing_inputs_vs_official):
+                print(
+                    "[filter] "
+                    f"dataset_extra_test_inputs_vs_official={dataset_extra_inputs_vs_official} "
+                    f"dataset_missing_test_inputs_vs_official={dataset_missing_inputs_vs_official}"
+                )
         else:
             err = filter_details.get("error")
             if err:
