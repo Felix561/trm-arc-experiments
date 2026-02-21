@@ -476,8 +476,9 @@ def main() -> None:
     )
     model_cls = load_model_class("recursive_reasoning.trm@TinyRecursiveReasoningModel_ACTV1")
     loss_cls = load_model_class("losses@ACTLossHead")
-    model = model_cls(model_cfg)
-    model = loss_cls(model, loss_type="stablemax_cross_entropy")
+    with torch.device(device):
+        model = model_cls(model_cfg)
+        model = loss_cls(model, loss_type="stablemax_cross_entropy")
 
     # Load checkpoint weights
     model.load_state_dict(sd, assign=True)
@@ -625,7 +626,8 @@ def main() -> None:
             num_batches += 1
             num_examples += int(batch_cpu["inputs"].shape[0])
             batch = {k: v.to(device, non_blocking=(device == "cuda")) for k, v in batch_cpu.items()}
-            carry = model.initial_carry(batch)
+            with torch.device(device):
+                carry = model.initial_carry(batch)
             preds_last = None
             labels = batch.get("labels")
             if labels is None:
