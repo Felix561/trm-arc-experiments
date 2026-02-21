@@ -82,6 +82,19 @@ python scripts/eval_only.py \
   --filter_official_eval v2
 ```
 
+Optional: run the same v2 eval but source the official task-ID list from
+`arcprize/ARC-AGI-2` (`data/evaluation.txt`) instead of TRM's Kaggle-combined JSON.
+The list is auto-downloaded and cached under `.cache/arc-agi-2/`:
+
+```bash
+python scripts/eval_only.py \
+  --checkpoint assets/checkpoints/arc_v2_public/step_723914 \
+  --data_path data/arc2concept-aug-1000 \
+  --output_dir runs/trm_exp_01_arc2_eval_arc_agi2_filter \
+  --filter_official_eval v2 \
+  --official_v2_source arc_agi2_github
+```
+
 - **TRM-EXP-01 (baseline eval, v1 example)**:
 
 ```bash
@@ -176,6 +189,8 @@ See `docs/metrics.md` for the definitions used here.
 - Checkpoints: [`arcprize/trm_arc_prize_verification`](https://huggingface.co/arcprize/trm_arc_prize_verification).
 - Official ARC-AGI-2 task repository (reference): [`arcprize/ARC-AGI-2`](https://github.com/arcprize/ARC-AGI-2).
 - For the evaluations reported in this repository, task files are built from the upstream TRM `kaggle/combined/arc-agi` inputs.
+  In `scripts/eval_only.py`, v2 filtering now supports two sources:
+  default `kaggle_combined` (existing behavior) and opt-in `arc_agi2_github`.
 - External rescoring source used in TRM-EXP-02: [`mvakde/mdlARC`](https://github.com/mvakde/mdlARC) (reference-only in this repo; no vendored code).
 - PoE reference used for TRM-EXP-02 interpretation: [Product of Experts with LLMs: Boosting Performance on ARC Is a Matter of Perspective](https://arxiv.org/pdf/2505.07859).
 - See also `THIRD_PARTY_NOTICES.md` for license/terms pointers.

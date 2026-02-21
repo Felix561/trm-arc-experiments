@@ -22,6 +22,14 @@ public benchmarks, it is important to evaluate only the intended task list.
 Scripts in this repo expose a `--filter_official_eval {v1,v2,concept}` option which filters by task IDs
 loaded from the upstream TRM JSON lists.
 
+For `scripts/eval_only.py` on v2, the source is configurable:
+
+- default: `--official_v2_source kaggle_combined` (existing behavior, TRM `kaggle/combined` list)
+- optional: `--official_v2_source arc_agi2_github` (downloads `arcprize/ARC-AGI-2/data/evaluation.txt`, caches locally)
+
+When filtering is enabled, `eval_report.json` stores `metadata.official_eval_details` with source/path and
+counts for kept/dropped/missing task IDs to make protocol differences auditable.
+
 ## What to report in papers/issues
 
 When reporting a number from this repo, always include:
