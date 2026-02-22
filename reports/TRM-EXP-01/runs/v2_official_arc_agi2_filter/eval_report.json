@@ -13,9 +13,9 @@
     "official_eval_details": {
       "eval_version": "v2",
       "source": "arc_agi2_github",
-      "task_list_path": "/home/jovyan/temp/arc_research_runs/trm-arc-experiments/.cache/arc-agi-2/main/evaluation.txt",
+      "task_list_path": ".cache/arc-agi-2/main/evaluation.txt",
       "task_list_url": "https://raw.githubusercontent.com/arcprize/ARC-AGI-2/main/data/evaluation.txt",
-      "task_json_root": "/home/jovyan/temp/arc_research_runs/trm-arc-experiments/.cache/arc-agi-2/main/evaluation",
+      "task_json_root": ".cache/arc-agi-2/main/evaluation",
       "downloaded_files": 0,
       "arc_agi2_ref": "main",
       "official_task_count": 120,

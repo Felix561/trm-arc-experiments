@@ -193,6 +193,7 @@ Reproducibility note:
 
 - This official-source run was executed with `--disable_compile --forward_dtype float16 --batch_size 512` on CUDA.
 - For strict A/B comparisons, rerun both Kaggle and official-source modes in the same environment and report both command lines, commit SHA, and checkpoint SHA256 from `eval_report.json`.
+- Treat the deltas above as source-comparison evidence for these committed artifacts; publish final claims from fresh paired reruns under one fixed environment.
 
 - **TRM-EXP-02 test-time experiments (v2)**
   - baseline last-step voting (`v2_2.1_2.2_2.3`): `pass@2_per_output = 0.0523`
