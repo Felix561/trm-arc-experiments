@@ -168,32 +168,11 @@ all metric values below are reported as ARC-style fractions in `[0,1]` (not perc
 
 ## Kaggle vs Official ARC-AGI-2 (v2)
 
-Using checkpoint `arc_v2_public/step_723914` and dataset `data/arc2concept-aug-1000`:
+We ran this source-comparison experiment and committed the official-source run artifact:
+`reports/TRM-EXP-01/runs/v2_official_arc_agi2_filter/eval_report.json`.
 
-- Kaggle-combined scoring reference (committed baseline): `reports/TRM-EXP-01/runs/v2_baseline/eval_report.json`
-- Official ARC-AGI-2 scoring run: `reports/TRM-EXP-01/runs/v2_official_arc_agi2_filter/eval_report.json`
-
-Observed per-task metric differences (`official - kaggle`):
-
-- `pass@1`: `0.02917 - 0.02917 = +0.00000`
-- `pass@2`: `0.05000 - 0.04583 = +0.00417`
-- `pass@5`: `0.06944 - 0.06944 = +0.00000`
-- `pass@10`: `0.06944 - 0.07222 = -0.00278`
-- `pass@100`: `0.09722 - 0.10833 = -0.01111`
-- `pass@1000`: `0.10556 - 0.11667 = -0.01111`
-
-Run metadata confirms the source difference:
-
-- Kaggle-combined test pairs in built dataset: `172`
-- Official ARC-AGI-2 scored test pairs: `167`
-- Extra Kaggle test inputs vs official: `5` across `5` task IDs
-  (`4a21e3da`, `abc82100`, `b6f77b65`, `f560132c`, `faa9f03d`)
-
-Reproducibility note:
-
-- This official-source run was executed with `--disable_compile --forward_dtype float16 --batch_size 512` on CUDA.
-- For strict A/B comparisons, rerun both Kaggle and official-source modes in the same environment and report both command lines, commit SHA, and checkpoint SHA256 from `eval_report.json`.
-- Treat the deltas above as source-comparison evidence for these committed artifacts; publish final claims from fresh paired reruns under one fixed environment.
+For full analysis (metric deltas, mismatched task IDs, and reproducibility notes), see:
+`experiments/TRM-EXP-01_trm_reproduce_arcprize_verification/README.md`.
 
 - **TRM-EXP-02 test-time experiments (v2)**
   - baseline last-step voting (`v2_2.1_2.2_2.3`): `pass@2_per_output = 0.0523`
