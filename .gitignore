@@ -18,3 +18,12 @@ reports/**/raw/
 # Optional local notes
 LOCAL_NOTES.md
 
+# Local/private LaTeX drafts and build artifacts
+docs/trm_mdlarc_professor_report_outline.*
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz
+*.fls
+*.fdb_latexmk
