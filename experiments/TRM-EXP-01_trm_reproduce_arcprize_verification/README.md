@@ -51,6 +51,41 @@ Notes:
 - In `arc_agi2_github` mode, `eval_only.py` downloads both `data/evaluation.txt` and `data/evaluation/<task_id>.json` and scores against those official `test` pairs (not only task IDs).
 - `eval_report.json` includes `metadata.official_eval_details` with source paths/URLs and task/pair overlap diagnostics.
 
+## Findings: Kaggle vs Official ARC-AGI-2 (v2)
+
+Committed artifacts:
+
+- Kaggle-combined baseline: `reports/TRM-EXP-01/runs/v2_baseline/eval_report.json`
+- Official ARC-AGI-2 scoring run: `reports/TRM-EXP-01/runs/v2_official_arc_agi2_filter/eval_report.json`
+
+Observed per-task deltas (`official - kaggle`):
+
+- `pass@1`: `0.02917 - 0.02917 = +0.00000`
+- `pass@2`: `0.05000 - 0.04583 = +0.00417`
+- `pass@5`: `0.06944 - 0.06944 = +0.00000`
+- `pass@10`: `0.06944 - 0.07222 = -0.00278`
+- `pass@100`: `0.09722 - 0.10833 = -0.01111`
+- `pass@1000`: `0.10556 - 0.11667 = -0.01111`
+
+Official-source run metadata (from `metadata.official_eval_details`) reports:
+
+- built dataset test pairs: `172`
+- official scored test pairs: `167`
+- extra Kaggle test inputs vs official: `5` across task IDs:
+  `4a21e3da`, `abc82100`, `b6f77b65`, `f560132c`, `faa9f03d`
+
+Interpretation:
+
+- The comparison confirms that the ARC-AGI-2 source choice changes scored outputs, not just task IDs.
+- In this run, switching to official ARC-AGI-2 puzzles increases `pass@2` but decreases high-K metrics.
+
+Reproducibility note:
+
+- The committed official-source run used:
+  `--disable_compile --forward_dtype float16 --batch_size 512 --official_v2_source arc_agi2_github`.
+- For publication-grade comparisons, rerun both source modes under the same environment and record:
+  command lines, git commit SHA, checkpoint SHA256, and `official_eval_details` block.
+
 ## Reproduce v1 (ARC-AGI-1 public eval)
 
 Build the v1 dataset variant (same builder, v1 subsets/source) and run:

@@ -33,6 +33,30 @@ not only a task-ID filter over TRM's `test_puzzles.json`.
 When filtering/scoring is enabled, `eval_report.json` stores `metadata.official_eval_details` with source/path and
 task/pair overlap counts to make protocol differences auditable.
 
+## Kaggle vs official v2 comparison (example)
+
+From committed artifacts:
+
+- Kaggle baseline: `reports/TRM-EXP-01/runs/v2_baseline/eval_report.json`
+- Official ARC-AGI-2 scoring: `reports/TRM-EXP-01/runs/v2_official_arc_agi2_filter/eval_report.json`
+
+Observed per-task metric deltas (`official - kaggle`):
+
+- `pass@1`: `+0.00000`
+- `pass@2`: `+0.00417`
+- `pass@5`: `+0.00000`
+- `pass@10`: `-0.00278`
+- `pass@100`: `-0.01111`
+- `pass@1000`: `-0.01111`
+
+This run's `official_eval_details` reports:
+
+- `dataset_test_pair_count_before_filter = 172`
+- `scored_test_pair_count = 167`
+- `dataset_extra_test_inputs_vs_official_count = 5`
+
+Takeaway: for ARC-AGI-2, source alignment must be checked at the `test`-pair level, not only task-ID level.
+
 ## What to report in papers/issues
 
 When reporting a number from this repo, always include:

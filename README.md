@@ -148,10 +148,11 @@ For full reproducibility, rerun experiments locally to regenerate JSON reports u
 Current committed run snapshots:
 
 - `reports/TRM-EXP-01/results.json` (ARC-AGI-1/2 baseline reproduction snapshot)
+- `reports/TRM-EXP-01/runs/v2_official_arc_agi2_filter/` (v2 rerun scored against official ARC-AGI-2 puzzle JSONs)
 - `reports/TRM-EXP-02/results.json` (outer-loop/halting/pooling/rescoring snapshot)
 - `reports/TRM-EXP-03/negative_result.json` (Base_Task_id structured-prefix finetune snapshot)
 
-The more detailed `runs/...` tree referenced below is produced during local reruns and is intentionally not committed.
+Most detailed `runs/...` trees are produced during local reruns and are not committed. Selected compact run artifacts are included under `reports/TRM-EXP-01/runs/` for source-comparison reproducibility.
 
 ## Key findings (current snapshot)
 
@@ -161,7 +162,36 @@ all metric values below are reported as ARC-style fractions in `[0,1]` (not perc
 - **TRM-EXP-01 baseline reproduction**
   - v1 baseline (`reports/TRM-EXP-01/results.json`): `pass@2 = 0.4438`
   - v2 baseline (`reports/TRM-EXP-01/results.json`): `pass@2 = 0.0458`
+  - v2 rerun with official ARC-AGI-2 puzzle JSON scoring (`reports/TRM-EXP-01/runs/v2_official_arc_agi2_filter/eval_report.json`):
+    `ARC/pass@2 = 0.0500`, `ARC/pass@2_per_output = 0.0539`
   - details and reproduction caveat: `experiments/TRM-EXP-01_trm_reproduce_arcprize_verification/README.md`
+
+## Kaggle vs Official ARC-AGI-2 (v2)
+
+Using checkpoint `arc_v2_public/step_723914` and dataset `data/arc2concept-aug-1000`:
+
+- Kaggle-combined scoring reference (committed baseline): `reports/TRM-EXP-01/runs/v2_baseline/eval_report.json`
+- Official ARC-AGI-2 scoring run: `reports/TRM-EXP-01/runs/v2_official_arc_agi2_filter/eval_report.json`
+
+Observed per-task metric differences (`official - kaggle`):
+
+- `pass@1`: `0.02917 - 0.02917 = +0.00000`
+- `pass@2`: `0.05000 - 0.04583 = +0.00417`
+- `pass@5`: `0.06944 - 0.06944 = +0.00000`
+- `pass@10`: `0.06944 - 0.07222 = -0.00278`
+- `pass@100`: `0.09722 - 0.10833 = -0.01111`
+- `pass@1000`: `0.10556 - 0.11667 = -0.01111`
+
+Run metadata confirms the source difference:
+
+- Kaggle-combined test pairs in built dataset: `172`
+- Official ARC-AGI-2 scored test pairs: `167`
+- Extra Kaggle test inputs vs official: `5` across `5` task IDs
+
+Reproducibility note:
+
+- This official-source run was executed with `--disable_compile --forward_dtype float16 --batch_size 512` on CUDA.
+- For strict A/B comparisons, rerun both Kaggle and official-source modes in the same environment and report both command lines, commit SHA, and checkpoint SHA256 from `eval_report.json`.
 
 - **TRM-EXP-02 test-time experiments (v2)**
   - baseline last-step voting (`v2_2.1_2.2_2.3`): `pass@2_per_output = 0.0523`

@@ -1,0 +1,160 @@
+{
+  "metadata": {
+    "timestamp": "2026-02-21T21:21:28",
+    "checkpoint": "assets/checkpoints/arc_v2_public/step_723914",
+    "checkpoint_sha256": "8d7036b97e7ea38c7dd29d01216bfcfc4e212af3024d5233fe40dd3059e8f4a9",
+    "data_path": "data/arc2concept-aug-1000",
+    "batch_size": 512,
+    "seed": 0,
+    "max_steps": 16,
+    "device": "cuda",
+    "filter_official_eval": "v2",
+    "official_v2_source": "arc_agi2_github",
+    "official_eval_details": {
+      "eval_version": "v2",
+      "source": "arc_agi2_github",
+      "task_list_path": "/home/jovyan/temp/arc_research_runs/trm-arc-experiments/.cache/arc-agi-2/main/evaluation.txt",
+      "task_list_url": "https://raw.githubusercontent.com/arcprize/ARC-AGI-2/main/data/evaluation.txt",
+      "task_json_root": "/home/jovyan/temp/arc_research_runs/trm-arc-experiments/.cache/arc-agi-2/main/evaluation",
+      "downloaded_files": 0,
+      "arc_agi2_ref": "main",
+      "official_task_count": 120,
+      "official_test_pair_count": 167,
+      "filter_mode": "replace_test_puzzles",
+      "dataset_task_count_before_filter": 120,
+      "kept_task_count": 120,
+      "dropped_task_count": 0,
+      "missing_official_ids_in_dataset_count": 0,
+      "dataset_test_pair_count_before_filter": 172,
+      "scored_task_count": 120,
+      "scored_test_pair_count": 167,
+      "dataset_extra_test_inputs_vs_official_count": 5,
+      "dataset_missing_test_inputs_vs_official_count": 0,
+      "task_test_input_mismatch_count": 5,
+      "task_test_input_mismatch_sample": [
+        "4a21e3da",
+        "abc82100",
+        "b6f77b65",
+        "f560132c",
+        "faa9f03d"
+      ],
+      "dropped_task_sample": [],
+      "missing_official_id_sample": []
+    },
+    "num_batches": 333,
+    "num_examples": 170496,
+    "wall_time_s": 44960.50309610367
+  },
+  "per_step": {
+    "0": {
+      "loss_mean": 660.6743105739288,
+      "tokenacc_mean": 0.7176172853455888,
+      "seqem_mean": 0.0,
+      "n": 170496.0
+    },
+    "1": {
+      "loss_mean": 713.9659538205196,
+      "tokenacc_mean": 0.722636112333597,
+      "seqem_mean": 0.0,
+      "n": 170496.0
+    },
+    "2": {
+      "loss_mean": 763.1130114778126,
+      "tokenacc_mean": 0.720423318154819,
+      "seqem_mean": 0.0,
+      "n": 170496.0
+    },
+    "3": {
+      "loss_mean": 787.0754742550591,
+      "tokenacc_mean": 0.7191729322970808,
+      "seqem_mean": 0.0,
+      "n": 170496.0
+    },
+    "4": {
+      "loss_mean": 800.8604768501009,
+      "tokenacc_mean": 0.7185068020412514,
+      "seqem_mean": 0.0,
+      "n": 170496.0
+    },
+    "5": {
+      "loss_mean": 808.8876313821767,
+      "tokenacc_mean": 0.718132586047814,
+      "seqem_mean": 0.0,
+      "n": 170496.0
+    },
+    "6": {
+      "loss_mean": 813.8016487602603,
+      "tokenacc_mean": 0.7177716365626624,
+      "seqem_mean": 0.0,
+      "n": 170496.0
+    },
+    "7": {
+      "loss_mean": 817.281191648108,
+      "tokenacc_mean": 0.7175808260748694,
+      "seqem_mean": 0.0,
+      "n": 170496.0
+    },
+    "8": {
+      "loss_mean": 819.9482690537926,
+      "tokenacc_mean": 0.7174002482994899,
+      "seqem_mean": 0.0,
+      "n": 170496.0
+    },
+    "9": {
+      "loss_mean": 821.6848627225438,
+      "tokenacc_mean": 0.7172853559837327,
+      "seqem_mean": 0.0,
+      "n": 170496.0
+    },
+    "10": {
+      "loss_mean": 822.999118221905,
+      "tokenacc_mean": 0.7172030809450078,
+      "seqem_mean": 0.0,
+      "n": 170496.0
+    },
+    "11": {
+      "loss_mean": 824.1946584242426,
+      "tokenacc_mean": 0.7171451293222897,
+      "seqem_mean": 0.0,
+      "n": 170496.0
+    },
+    "12": {
+      "loss_mean": 825.4585389904532,
+      "tokenacc_mean": 0.7169729224867649,
+      "seqem_mean": 0.0,
+      "n": 170496.0
+    },
+    "13": {
+      "loss_mean": 826.0153252338034,
+      "tokenacc_mean": 0.7170017409969021,
+      "seqem_mean": 0.0,
+      "n": 170496.0
+    },
+    "14": {
+      "loss_mean": 826.6385009028033,
+      "tokenacc_mean": 0.7169089205003716,
+      "seqem_mean": 0.0,
+      "n": 170496.0
+    },
+    "15": {
+      "loss_mean": 827.0968179746453,
+      "tokenacc_mean": 0.7169047172989573,
+      "seqem_mean": 0.0,
+      "n": 170496.0
+    }
+  },
+  "metrics": {
+    "ARC/pass@1": 0.029166666666666667,
+    "ARC/pass@2": 0.05,
+    "ARC/pass@5": 0.06944444444444443,
+    "ARC/pass@10": 0.06944444444444443,
+    "ARC/pass@100": 0.09722222222222222,
+    "ARC/pass@1000": 0.10555555555555556,
+    "ARC/pass@1_per_output": 0.03592814371257485,
+    "ARC/pass@2_per_output": 0.05389221556886228,
+    "ARC/pass@5_per_output": 0.0718562874251497,
+    "ARC/pass@10_per_output": 0.0718562874251497,
+    "ARC/pass@100_per_output": 0.09580838323353294,
+    "ARC/pass@1000_per_output": 0.10179640718562874
+  }
+}
