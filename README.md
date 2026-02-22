@@ -187,6 +187,7 @@ Run metadata confirms the source difference:
 - Kaggle-combined test pairs in built dataset: `172`
 - Official ARC-AGI-2 scored test pairs: `167`
 - Extra Kaggle test inputs vs official: `5` across `5` task IDs
+  (`4a21e3da`, `abc82100`, `b6f77b65`, `f560132c`, `faa9f03d`)
 
 Reproducibility note:
 
