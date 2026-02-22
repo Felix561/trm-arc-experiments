@@ -53,6 +53,12 @@ Notes:
 
 ## Findings: Kaggle vs Official ARC-AGI-2 (v2)
 
+Motivation and public disclosure:
+
+- We ran this comparison because we found that the TRM/Kaggle-combined ARC-AGI-2 bundle contains `5` additional eval test inputs (same task IDs, different total test pairs) compared with the original `arcprize/ARC-AGI-2` evaluation set.
+- We investigated whether this source difference could explain the published verification numbers on Hugging Face ([`arcprize/trm_arc_prize_verification`](https://huggingface.co/arcprize/trm_arc_prize_verification), often cited around `6.2%` on v2 eval).
+- Conclusion: source choice does change metrics, but in our runs it does **not** fully close the gap; we still do not exactly reproduce the reported `6.2%` v2 result.
+
 Committed artifacts:
 
 - Kaggle-combined baseline: `reports/TRM-EXP-01/runs/v2_baseline/eval_report.json`
