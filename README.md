@@ -1,5 +1,11 @@
 # TRM ARC experiments (structured release)
 
+This repository presents practical experiments on improving ARC-AGI performance with Tiny Recursive Models (TRM).
+We first reproduce established baselines, then evaluate test-time strategies (like step selection and voting), and also report one fine-tuning direction that did not reliably help.
+A key result is that simply increasing inference compute does not always improve outcomes.
+In contrast, stronger rescoring methods can improve performance in specific settings.
+The project is organized for transparency and reuse, with clear experiment IDs, reproducible scripts, and compact result snapshots.
+
 This repository is the public, reproducible TRM experiment package. It is organized around three experiment groups:
 
 1. **Reproduction of ARC Prize TRM baselines** (v1 and v2 checkpoints)
@@ -145,8 +151,8 @@ From committed report artifacts in `reports/`:
 all metric values below are reported as ARC-style fractions in `[0,1]` (not percentages).
 
 - **TRM-EXP-01 baseline reproduction**
-  - v1 baseline (`reports/TRM-EXP-01/results.json`): `pass@2 = 0.4438`
-  - v2 baseline (`reports/TRM-EXP-01/results.json`): `pass@2 = 0.0458`
+  - v1 baseline (`reports/TRM-EXP-01/results.json`): `pass@2 = 0.44`
+  - v2 baseline (`reports/TRM-EXP-01/results.json`): `pass@2 = 0.05`
   - details and reproduction caveat: `experiments/TRM-EXP-01_trm_reproduce_arcprize_verification/README.md`
 
 - **TRM-EXP-02 test-time experiments (v2)**
