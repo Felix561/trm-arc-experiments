@@ -31,7 +31,7 @@ Relevant artifacts:
 
 Example (from committed run `v2_2.1_2.2_2.3`):
 
-![Pass per output vs outer step](../../reports/TRM-EXP-02/runs/v2_2.1_2.2_2.3/pass_per_output_vs_step.png)
+_Figure omitted in committed snapshots (generated under local `runs/...` during reruns)._
 
 ## 2.2 Halting-head early stopping
 
@@ -59,7 +59,7 @@ Key number (`pass@2_per_output`, run `v2_2.1_2.2_2.3`):
 
 Example:
 
-![Halting histogram](../../reports/TRM-EXP-02/runs/v2_2.1_2.2_2.3/halt_hist.png)
+_Figure omitted in committed snapshots (generated under local `runs/...` during reruns)._
 
 ## 2.3 Pool all outer-loop candidates
 
@@ -86,9 +86,9 @@ Interesting diagnostic:
 
 Examples:
 
-![Strategy scoreboard (pass@2 per output)](../../reports/TRM-EXP-02/runs/v2_2.1_2.2_2.3/strategy_scoreboard_pass2_per_output.png)
+_Figure omitted in committed snapshots (generated under local `runs/...` during reruns)._
 
-![Unique candidates vs step](../../reports/TRM-EXP-02/runs/v2_2.1_2.2_2.3/unique_candidates_vs_step.png)
+_Figure omitted in committed snapshots (generated under local `runs/...` during reruns)._
 
 ## 2.4 Alternative rescoring and voting
 
