@@ -88,6 +88,20 @@ python scripts/eval_only.py \
   --filter_official_eval v2
 ```
 
+Optional: run the same v2 eval but score against the official ARC-AGI-2 eval puzzles
+from `arcprize/ARC-AGI-2` (`data/evaluation.txt` + `data/evaluation/<task_id>.json`)
+instead of the TRM Kaggle-combined `test_puzzles.json`.
+Files are auto-downloaded and cached under `.cache/arc-agi-2/`:
+
+```bash
+python scripts/eval_only.py \
+  --checkpoint assets/checkpoints/arc_v2_public/step_723914 \
+  --data_path data/arc2concept-aug-1000 \
+  --output_dir runs/trm_exp_01_arc2_eval_arc_agi2_filter \
+  --filter_official_eval v2 \
+  --official_v2_source arc_agi2_github
+```
+
 - **TRM-EXP-01 (baseline eval, v1 example)**:
 
 ```bash
@@ -140,10 +154,11 @@ For full reproducibility, rerun experiments locally to regenerate JSON reports u
 Current committed run snapshots:
 
 - `reports/TRM-EXP-01/results.json` (ARC-AGI-1/2 baseline reproduction snapshot)
+- `reports/TRM-EXP-01/runs/v2_official_arc_agi2_filter/` (v2 rerun scored against official ARC-AGI-2 puzzle JSONs)
 - `reports/TRM-EXP-02/results.json` (outer-loop/halting/pooling/rescoring snapshot)
 - `reports/TRM-EXP-03/negative_result.json` (Base_Task_id structured-prefix finetune snapshot)
 
-The more detailed `runs/...` tree referenced below is produced during local reruns and is intentionally not committed.
+Most detailed `runs/...` trees are produced during local reruns and are not committed. Selected compact run artifacts are included under `reports/TRM-EXP-01/runs/` for source-comparison reproducibility.
 
 ## Key findings (current snapshot)
 
@@ -154,6 +169,14 @@ all metric values below are reported as ARC-style fractions in `[0,1]` (not perc
   - v1 baseline (`reports/TRM-EXP-01/results.json`): `pass@2 = 0.44`
   - v2 baseline (`reports/TRM-EXP-01/results.json`): `pass@2 = 0.05`
   - details and reproduction caveat: `experiments/TRM-EXP-01_trm_reproduce_arcprize_verification/README.md`
+
+## Kaggle vs Official ARC-AGI-2 (v2)
+
+We ran this source-comparison experiment and committed the official-source run artifact:
+`reports/TRM-EXP-01/runs/v2_official_arc_agi2_filter/eval_report.json`.
+
+For full analysis (metric deltas, mismatched task IDs, and reproducibility notes), see:
+`experiments/TRM-EXP-01_trm_reproduce_arcprize_verification/README.md`.
 
 - **TRM-EXP-02 test-time experiments (v2)**
   - baseline last-step voting (`v2_2.1_2.2_2.3`): `pass@2_per_output = 0.0523`
@@ -182,6 +205,8 @@ See `docs/metrics.md` for the definitions used here.
 - Checkpoints: [`arcprize/trm_arc_prize_verification`](https://huggingface.co/arcprize/trm_arc_prize_verification).
 - Official ARC-AGI-2 task repository (reference): [`arcprize/ARC-AGI-2`](https://github.com/arcprize/ARC-AGI-2).
 - For the evaluations reported in this repository, task files are built from the upstream TRM `kaggle/combined/arc-agi` inputs.
+  In `scripts/eval_only.py`, v2 evaluation now supports two scoring sources:
+  default `kaggle_combined` (existing behavior) and opt-in `arc_agi2_github` (official ARC-AGI-2 puzzle JSONs).
 - External rescoring source used in TRM-EXP-02: [`mvakde/mdlARC`](https://github.com/mvakde/mdlARC) (reference-only in this repo; no vendored code).
 - PoE reference used for TRM-EXP-02 interpretation: [Product of Experts with LLMs: Boosting Performance on ARC Is a Matter of Perspective](https://arxiv.org/pdf/2505.07859).
 - See also `THIRD_PARTY_NOTICES.md` for license/terms pointers.

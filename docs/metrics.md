@@ -22,6 +22,41 @@ public benchmarks, it is important to evaluate only the intended task list.
 Scripts in this repo expose a `--filter_official_eval {v1,v2,concept}` option which filters by task IDs
 loaded from the upstream TRM JSON lists.
 
+For `scripts/eval_only.py` on v2, the source is configurable:
+
+- default: `--official_v2_source kaggle_combined` (existing behavior, TRM `kaggle/combined` list)
+- optional: `--official_v2_source arc_agi2_github` (downloads `arcprize/ARC-AGI-2/data/evaluation.txt` and `data/evaluation/<task_id>.json`, caches locally)
+
+In `arc_agi2_github` mode, scoring uses the official puzzle JSON `test` pairs from ARC-AGI-2,
+not only a task-ID filter over TRM's `test_puzzles.json`.
+
+When filtering/scoring is enabled, `eval_report.json` stores `metadata.official_eval_details` with source/path and
+task/pair overlap counts to make protocol differences auditable.
+
+## Kaggle vs official v2 comparison (example)
+
+From committed artifacts:
+
+- Kaggle baseline: `reports/TRM-EXP-01/runs/v2_baseline/eval_report.json`
+- Official ARC-AGI-2 scoring: `reports/TRM-EXP-01/runs/v2_official_arc_agi2_filter/eval_report.json`
+
+Observed per-task metric deltas (`official - kaggle`):
+
+- `pass@1`: `+0.00000`
+- `pass@2`: `+0.00417`
+- `pass@5`: `+0.00000`
+- `pass@10`: `-0.00278`
+- `pass@100`: `-0.01111`
+- `pass@1000`: `-0.01111`
+
+This run's `official_eval_details` reports:
+
+- `dataset_test_pair_count_before_filter = 172`
+- `scored_test_pair_count = 167`
+- `dataset_extra_test_inputs_vs_official_count = 5`
+
+Takeaway: for ARC-AGI-2, source alignment must be checked at the `test`-pair level, not only task-ID level.
+
 ## What to report in papers/issues
 
 When reporting a number from this repo, always include:
