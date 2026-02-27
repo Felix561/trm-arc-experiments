@@ -151,8 +151,8 @@ From committed report artifacts in `reports/`:
 all metric values below are reported as ARC-style fractions in `[0,1]` (not percentages).
 
 - **TRM-EXP-01 baseline reproduction**
-  - v1 baseline (`reports/TRM-EXP-01/results.json`): `pass@2 = 0.4438`
-  - v2 baseline (`reports/TRM-EXP-01/results.json`): `pass@2 = 0.0458`
+  - v1 baseline (`reports/TRM-EXP-01/results.json`): `pass@2 = 0.44`
+  - v2 baseline (`reports/TRM-EXP-01/results.json`): `pass@2 = 0.05`
   - details and reproduction caveat: `experiments/TRM-EXP-01_trm_reproduce_arcprize_verification/README.md`
 
 - **TRM-EXP-02 test-time experiments (v2)**
