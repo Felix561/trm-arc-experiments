@@ -1,4 +1,4 @@
-# TRM ARC experiments (structured release)
+# TRM ARC experiments  
 
 This repository presents practical experiments on improving ARC-AGI performance with Tiny Recursive Models (TRM).
 We first reproduce established baselines, then evaluate test-time strategies (like step selection and voting), and also report one fine-tuning direction that did not reliably help.
